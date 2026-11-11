@@ -1,0 +1,64 @@
+// MechKeys - Fabric 26.x (one source tree, builds for 26.1 / 26.2 / 26.3). Toolchain: Fabric Loom + Gradle 9.4 + JDK 25
+//
+// PORTING NOTES (next update) - full guide in docs/PORTING.md
+//  * New Minecraft version  : add versions/<mc>.properties (copy the newest one), add <mc> to the matrix in
+//                             .github/workflows/build.yml, run:  gradle build -Pmc=<mc>
+//  * New Loom / Gradle / JDK: change the plugin version below, 'gradle-version' and 'java-version' in the workflow,
+//                             and the two VERSION_25 / release = 25 lines. Keep them in sync with fabric.mod.json ("java").
+//  * The Minecraft-free core lives in ../common and is compiled into this module through the srcDir lines below.
+//    Never import net.minecraft.* from ../common - that is what lets the same code run on Forge 1.8.9 too.
+plugins {
+    id 'net.fabricmc.fabric-loom' version '1.16-SNAPSHOT'
+    id 'maven-publish'
+}
+
+def mcKey = findProperty('mc').toString()
+def vfile = file("versions/${mcKey}.properties")
+if (!vfile.exists()) throw new GradleException("Unknown target -Pmc=${mcKey}; expected one of the files in versions/")
+def vp = new Properties(); vfile.withInputStream { vp.load(it) }
+def verProps = new Properties(); file('../version.properties').withInputStream { verProps.load(it) }
+
+version = verProps.getProperty('mod_version')
+group = project.maven_group
+base { archivesName = "MechKeys-${mcKey}" }
+
+repositories { mavenCentral() }
+
+// Shared, Minecraft-free core (profile format, loaders, mixer, engine) + bundled default packs + tests
+sourceSets {
+    main {
+        java.srcDir '../common/src/main/java'
+        resources.srcDir '../common/src/main/resources'
+    }
+    test {
+        java.srcDir '../common/src/test/java'
+        resources.srcDir '../common/src/test/resources'
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${vp.getProperty('minecraft_version')}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${vp.getProperty('fabric_api_version')}"
+    testImplementation 'junit:junit:4.13.2'
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.release = 25 }
+
+processResources {
+    def mcRange = vp.getProperty('mc_range')
+    inputs.property 'version', project.version
+    inputs.property 'mc_range', mcRange
+    filesMatching('fabric.mod.json') { expand 'version': project.version, 'mc_range': mcRange }
+}
+
+jar {
+    from('../LICENSE') { into 'META-INF' }
+    from('../NOTICE.md') { into 'META-INF' }
+}
+test { useJUnit(); testLogging { showStandardStreams = true; events 'failed' } }

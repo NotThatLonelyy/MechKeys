@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "mechkeys",
+  "version": "${version}",
+  "name": "MechKeys",
+  "description": "Mechanical keyboard and mouse sounds for Minecraft. Separate keyboard and mouse sounds; imports Mechvibes-format sound packs. Unofficial; not affiliated with or endorsed by Mechvibes.",
+  "authors": ["NotThatLonely"],
+  "contact": { "sources": "https://github.com/NotThatLonely/MechKeys" },
+  "license": "MIT",
+  "icon": "assets/mechkeys/icon.png",
+  "environment": "client",
+  "entrypoints": { "client": ["io.github.notthatlonely.mechkeys.fabric.MechKeysMod"] },
+  "mixins": ["mechkeys.mixins.json"],
+  "depends": { "fabricloader": ">=0.19.2", "minecraft": "${mc_range}", "java": ">=25", "fabric-api": "*" }
+}

@@ -1,0 +1,138 @@
+# MechKeys - one repo, one workflow, two independent toolchains:
+#   fabric : Fabric 26.1 / 26.2 / 26.3  (JDK 25 + Gradle 9.4, one matrix entry per Minecraft version)
+#   forge  : Forge 1.8.9                (JDK 8  + Gradle 2.14.1 + ForgeGradle 2.1)
+# Every job uploads its own jar; a tag like v1.0.0 additionally publishes ALL jars to one GitHub release.
+#
+# NOTES FOR NEXT UPDATE (details: docs/PORTING.md)
+#  * New Fabric Minecraft version -> add versions/<mc>.properties and append '<mc>' to the matrix below. Nothing else.
+#  * New legacy Forge version     -> copy the 'forge' job, point working-directory / cache key / artifact name at forge-<mc>/.
+#  * Jobs are independent (fail-fast: false): a broken version never blocks the other jars.
+name: Build MechKeys
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fabric:
+    name: Fabric ${{ matrix.mc }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false          # one broken version never blocks the other jars
+      matrix:
+        mc: ['26.1', '26.2', '26.3']     # <- add new Fabric Minecraft versions here
+    defaults:
+      run:
+        working-directory: fabric
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Set up Gradle 9.4
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.4.0'
+
+      - name: Build and test (${{ matrix.mc }})
+        run: gradle build -Pmc=${{ matrix.mc }} --no-daemon --stacktrace
+
+      - name: Upload mod JAR
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MechKeys-${{ matrix.mc }}-jar
+          path: |
+            fabric/build/libs/*.jar
+            !fabric/build/libs/*-sources.jar
+          if-no-files-found: error
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report-fabric-${{ matrix.mc }}
+          path: fabric/build/reports/tests/
+          if-no-files-found: ignore
+
+  forge:
+    name: Forge 1.8.9
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: forge-1.8.9
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 8 (required by ForgeGradle 2.1)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+
+      - name: Install Gradle 2.14.1 (required by ForgeGradle 2.1)
+        run: |
+          curl -fsSL -o gradle.zip https://services.gradle.org/distributions/gradle-2.14.1-bin.zip
+          unzip -q gradle.zip -d "$HOME"
+          echo "$HOME/gradle-2.14.1/bin" >> "$GITHUB_PATH"
+
+      - name: Cache Gradle / ForgeGradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: forgegradle-${{ hashFiles('forge-1.8.9/build.gradle') }}
+          restore-keys: forgegradle-
+
+      - name: Set up Forge workspace
+        run: gradle setupCiWorkspace --no-daemon --stacktrace
+
+      - name: Build and test
+        run: gradle build --no-daemon --stacktrace
+
+      - name: Upload mod JAR
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MechKeys-1.8.9-jar
+          path: |
+            forge-1.8.9/build/libs/*.jar
+            !forge-1.8.9/build/libs/*-sources.jar
+          if-no-files-found: error
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report-forge-1.8.9
+          path: forge-1.8.9/build/reports/tests/
+          if-no-files-found: ignore
+
+  release:
+    name: Publish release (tags v*)
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [fabric, forge]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all jars
+        uses: actions/download-artifact@v4
+        with:
+          pattern: MechKeys-*-jar
+          path: dist
+          merge-multiple: true
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.jar

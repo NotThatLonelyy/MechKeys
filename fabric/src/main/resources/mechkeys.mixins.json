@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "io.github.notthatlonely.mechkeys.fabric.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": ["KeyboardHandlerMixin", "MouseHandlerMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

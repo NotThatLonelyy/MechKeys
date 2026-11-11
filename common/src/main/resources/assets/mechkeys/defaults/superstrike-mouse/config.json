@@ -1,0 +1,44 @@
+{
+  "audio_file": "SuperStrike.wav",
+  "config_version": "2",
+  "created_at": "2026-08-18T12:23:39.537516300+00:00",
+  "definition_method": "single",
+  "author": "m0uh",
+  "definitions": {
+    "MouseLeft": {
+      "timing": [
+        [
+          26,
+          400
+        ],
+        [
+          450,
+          600
+        ]
+      ]
+    },
+    "MouseRight": {
+      "timing": [
+        [
+          800,
+          940
+        ],
+        [
+          950,
+          1300
+        ]
+      ]
+    }
+  },
+  "name": "X2 SuperStrike MOUSE (My First Mouse SP) Recorded by Me",
+  "options": {
+    "random_pitch": false,
+    "recommended_volume": 1
+  },
+  "tags": [
+    "clicky"
+  ],
+  "id": "mv-fee46827433c482d851b9653457ce206",
+  "version": "1",
+  "description": "So I still don't understand fully how the mouse packs work, but I think with a little more time I can get it down, I always wanted to see if anyone could make a Superstrike sound pack and everyone says its not possible since it's a \"silent\" mouse. But if you crank it the max it has a vibration sound to it, this is only my first pack and I have plenty more mice like the Atlantis Mini 4k, Model O 1 and 2, OP14k and 8k v2 and more. Just experimenting with this, still figuring it out! Hope you guys like it, even tho it may be mid lol. Recorded on top of a Wallhack Glass Pad underneath. I understand this is a Keyboard thread but I can't add files or post anything in the mouse thread."
+}

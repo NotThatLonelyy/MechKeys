@@ -1,0 +1,64 @@
+// MechKeys - Forge 1.8.9. Toolchain: ForgeGradle 2.1 + Gradle 2.14.1 + JDK 8 (see .github/workflows/build.yml)
+//
+// PORTING NOTES (next update) - full guide in docs/PORTING.md
+//  * Another legacy Forge version (1.7.10 / 1.12.2 ...): copy this whole folder to forge-<mc>/, change 'minecraft.version',
+//    'mappings', archivesBaseName and the input/GUI classes, then add a job for it in .github/workflows/build.yml.
+//  * The Minecraft-free core lives in ../common (Java 8 source level on purpose, because this toolchain is JDK 8).
+//    Do not use Java 9+ APIs or syntax there. Never import net.minecraft.* from ../common.
+//  * Release version comes from ../version.properties.
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { name = 'forge'; url = 'https://maven.minecraftforge.net/' }
+        maven { name = 'forge-legacy'; url = 'http://files.minecraftforge.net/maven' }
+        maven { name = 'sonatype'; url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    }
+    dependencies { classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT' }
+}
+apply plugin: 'net.minecraftforge.gradle.forge'
+
+def verProps = new Properties(); file('../version.properties').withInputStream { verProps.load(it) }
+
+version = verProps.getProperty('mod_version')
+group = "io.github.notthatlonely.mechkeys"
+archivesBaseName = "MechKeys-1.8.9"
+sourceCompatibility = targetCompatibility = '1.8'
+compileJava { options.encoding = 'UTF-8' }
+compileTestJava { options.encoding = 'UTF-8' }
+
+// Shared, Minecraft-free core (profile format, loaders, mixer, engine) + bundled default packs + tests
+sourceSets {
+    main {
+        java { srcDir '../common/src/main/java' }
+        resources { srcDir '../common/src/main/resources' }
+    }
+    test {
+        java { srcDir '../common/src/test/java' }
+        resources { srcDir '../common/src/test/resources' }
+    }
+}
+
+minecraft {
+    version = "1.8.9-11.15.1.2318-1.8.9"
+    runDir = "run"
+    mappings = "stable_22"
+}
+
+repositories { mavenCentral() }
+dependencies { testCompile 'junit:junit:4.12' }
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+        expand 'version': project.version, 'mcversion': project.minecraft.version
+    }
+    from(sourceSets.main.resources.srcDirs) { exclude 'mcmod.info' }
+}
+
+jar {
+    from('../LICENSE') { into 'META-INF' }
+    from('../NOTICE.md') { into 'META-INF' }
+}
+test { testLogging { showStandardStreams = true; events 'failed' } }

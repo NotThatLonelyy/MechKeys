@@ -1,0 +1,15 @@
+.gradle/
+build/
+run/
+out/
+.idea/
+*.iml
+eclipse/
+.classpath
+.project
+
+# local / OS
+*.log
+.DS_Store
+run/
+*.class

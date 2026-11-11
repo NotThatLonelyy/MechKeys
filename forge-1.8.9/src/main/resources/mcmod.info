@@ -1,0 +1,13 @@
+[{
+  "modid": "mechkeys",
+  "name": "MechKeys",
+  "description": "Mechanical keyboard and mouse sounds for Minecraft. Separate keyboard and mouse sounds; imports Mechvibes-format sound packs. Unofficial; not affiliated with or endorsed by Mechvibes.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "https://github.com/NotThatLonely/MechKeys",
+  "authorList": ["NotThatLonely"],
+  "credits": "Sound pack format and the Mechvibes editor by Mechvibes (MIT) - https://github.com/hainguyents13/mechvibes",
+  "logoFile": "/assets/mechkeys/logo.png",
+  "screenshots": [],
+  "dependencies": []
+}]
